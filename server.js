@@ -685,7 +685,44 @@ app.get(
   }
 );
 
+/* =========================
+   ADMIN MEMBERS
+========================= */
 
+app.get(
+  '/api/admin/members',
+  auth,
+  admin,
+  (req, res) => {
+
+    const rows = db.prepare(`
+      SELECT
+        u.id,
+        u.mobile,
+        u.role,
+        u.status,
+        u.created_at,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM memberships m
+            WHERE m.user_id=u.id
+            AND m.status='active'
+            AND (
+              m.end_at IS NULL
+              OR datetime(m.end_at)>datetime('now')
+            )
+          )
+          THEN 1
+          ELSE 0
+        END AS paid
+      FROM users u
+      ORDER BY u.id DESC
+    `).all();
+
+    res.json(rows);
+  }
+);
 /* =========================
    ADMIN PROFILES
 ========================= */
