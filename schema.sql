@@ -107,7 +107,7 @@ INSERT OR IGNORE INTO admin_settings(key,value) VALUES
 ('admin_mobile','CHANGE_ME'),
 ('admin_whatsapp','CHANGE_ME'),
 ('contact_message','Admin से रिश्ता करवाने के लिए यहाँ संपर्क करें।');
-
+('admin_advice','विवाह जीवन का महत्वपूर्ण निर्णय है। रिश्ता तय करने से पहले परिवार, स्वभाव, शिक्षा, संस्कार और भविष्य की योजनाओं के बारे में अच्छी तरह जानकारी प्राप्त करें।');
 CREATE TABLE IF NOT EXISTS blocked_users (
   user_id INTEGER PRIMARY KEY,
   reason TEXT,
