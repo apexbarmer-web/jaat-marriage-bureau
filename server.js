@@ -108,7 +108,7 @@ app.get('/api/admin/dashboard',auth,admin,(req,res)=>{
     pendingMemberships:count("SELECT COUNT(*) n FROM memberships WHERE status='pending'"),
     pendingContacts:count("SELECT COUNT(*) n FROM contact_requests WHERE status='pending'"),
     pendingAdminRequests:count("SELECT COUNT(*) n FROM admin_requests WHERE status='pending'"),
-    openReports:count("SELECT COUNT(*) n FROM reports WHERE status='open')
+openReports:count("SELECT COUNT(*) n FROM reports WHERE status='open'")    
   });
 });
 
