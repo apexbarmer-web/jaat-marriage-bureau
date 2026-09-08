@@ -833,38 +833,47 @@ async function loadAdminMembers(){
 
   try{
 
-    const x =
-      await api(
-        '/api/admin/dashboard'
-      );
+    const x = await api('/api/admin/members');
 
+    document.getElementById('adminMembers').innerHTML =
 
-    document.getElementById(
-      'adminMembers'
-    ).innerHTML =
+      x.map(m => `
+        <div class="card">
 
-      `<p>
-        कुल Users:
-        <b>${x.users}</b>
-      </p>
+          <b>Member ID: ${m.id}</b><br>
 
-      <p>
-        Members की पूरी सूची अगली
-        Admin feature में जोड़ी जाएगी।
-      </p>`;
+          📱 Mobile:
+          ${m.mobile || '-'}<br>
 
+          Role:
+          ${m.role}<br>
+
+          Status:
+          <b>${m.status}</b><br>
+
+          Membership:
+          ${
+            Number(m.paid) === 1
+              ? '🟢 Paid'
+              : '⚪ Free'
+          }<br>
+
+          Registered:
+          ${m.created_at || '-'}
+
+        </div>
+      `).join('')
+
+      || 'कोई member नहीं';
 
   }catch(e){
 
-    document.getElementById(
-      'adminMembers'
-    ).textContent =
+    document.getElementById('adminMembers').textContent =
       e.message;
 
   }
 
 }
-
 
 /* =========================
    ADMIN PROFILES
