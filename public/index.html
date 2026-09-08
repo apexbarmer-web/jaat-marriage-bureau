@@ -1,10 +1,306 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="hi">
 <head>
-<title>Jaat Marriage Bureau</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jaat Marriage Bureau — Phase 4</title>
+
+<style>
+body{
+font-family:Arial,sans-serif;
+max-width:1000px;
+margin:auto;
+padding:16px;
+background:#f6f7fb
+}
+.card{
+background:white;
+padding:16px;
+margin:12px 0;
+border-radius:12px;
+box-shadow:0 2px 8px #ddd
+}
+button{
+padding:10px 14px;
+border:0;
+border-radius:8px;
+margin:4px;
+cursor:pointer
+}
+input,select{
+padding:10px;
+width:100%;
+box-sizing:border-box;
+margin:5px 0
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:12px
+}
+.lock{
+opacity:.65
+}
+small{
+color:#666
+}
+</style>
 </head>
+
 <body>
+
 <h1>Jaat Marriage Bureau</h1>
-<p>Website is loading...</p>
+
+<div class="card">
+<h2>🔐 Login / Registration</h2>
+
+<p>नए सदस्य भी यहीं से FREE Registration कर सकते हैं।</p>
+
+<input id="mobile" type="tel" maxlength="10"
+placeholder="10 अंकों का मोबाइल नंबर">
+
+<input id="otp" type="tel" maxlength="6"
+placeholder="Demo OTP - कोई भी 6 अंक">
+
+<button onclick="login()">Login / Register</button>
+
+<div id="me"></div>
+</div>
+
+
+<div class="card">
+<h2>💳 Paid Membership</h2>
+
+<div class="grid">
+<button onclick="buy('monthly')">Monthly ₹299</button>
+<button onclick="buy('quarterly')">3 Months ₹699</button>
+<button onclick="buy('yearly')">Yearly ₹1999</button>
+</div>
+
+<div id="membership"></div>
+</div>
+
+
+<div class="card">
+<h2>👥 Profiles</h2>
+
+<button onclick="profiles()">Profiles देखें / Refresh</button>
+
+<div id="profiles" class="grid"></div>
+</div>
+
+
+<div class="card">
+<h2>🤝 Admin से रिश्ता करवाएँ</h2>
+
+<input id="adminmsg"
+placeholder="अपना संदेश लिखें">
+
+<button onclick="adminRequest()">
+Admin को Request भेजें
+</button>
+</div>
+
+
+<div class="card">
+<h2>⚙️ Admin Dashboard</h2>
+
+<button onclick="dashboard()">
+Admin Dashboard खोलें
+</button>
+
+<pre id="admin"></pre>
+</div>
+
+
+<script>
+
+let token=localStorage.getItem('jmb_token');
+
+const api=(u,o={})=>
+fetch(u,{
+...o,
+headers:{
+'Content-Type':'application/json',
+...(o.headers||{}),
+...(token?{Authorization:'Bearer '+token}:{})
+}
+}).then(r=>r.json());
+
+
+async function login(){
+
+const x=await api('/api/login',{
+method:'POST',
+body:JSON.stringify({
+mobile:mobile.value,
+otp:otp.value
+})
+});
+
+if(x.token){
+
+token=x.token;
+
+localStorage.setItem('jmb_token',token);
+
+me.textContent=
+'Login सफल • Paid: '+x.user.paid;
+
+profiles();
+membership();
+
+}else{
+
+alert(x.error||'Login failed');
+
+}
+
+}
+
+
+async function buy(plan){
+
+if(!token)
+return alert('पहले Login करें');
+
+const x=await api('/api/membership/create',{
+method:'POST',
+body:JSON.stringify({plan})
+});
+
+if(x.membership_id){
+
+if(confirm(
+x.message+
+'\nDemo payment activate करें?'
+)){
+
+const y=await api(
+'/api/membership/demo-pay',
+{
+method:'POST',
+body:JSON.stringify({
+membership_id:x.membership_id
+})
+}
+);
+
+alert(y.message||y.error);
+
+membership();
+profiles();
+
+}
+
+}else{
+
+alert(x.error);
+
+}
+
+}
+
+
+async function membership(){
+
+const x=await api('/api/memberships');
+
+document.getElementById('membership').innerHTML=
+
+x.map(m=>
+`<p>
+<b>${m.plan_name}</b>
+₹${m.amount}
+— ${m.status}
+${m.end_at?'— '+m.end_at:''}
+</p>`
+).join('')
+
+||'कोई membership नहीं';
+
+}
+
+
+async function profiles(){
+
+const x=await api('/api/profiles');
+
+document.getElementById('profiles').innerHTML=
+
+x.map(p=>
+`<div class="card">
+
+<b>${p.name||'नाम नहीं'}</b>
+
+<br>
+उम्र: ${p.age||'-'}
+
+<br>
+शिक्षा: ${p.education||'-'}
+
+${p.village?
+'<br>गाँव: '+p.village:''
+}
+
+<br>
+
+${p.mobile?
+'📞 '+p.mobile:
+'🔒 मोबाइल गोपनीय'
+}
+
+</div>`
+).join('')
+
+||'कोई approved profile नहीं';
+
+}
+
+
+async function adminRequest(){
+
+const x=await api('/api/admin-request',{
+method:'POST',
+body:JSON.stringify({
+message:adminmsg.value
+})
+});
+
+alert(x.message||x.error);
+
+}
+
+
+async function dashboard(){
+
+const x=await api('/api/admin/dashboard');
+
+document.getElementById('admin').textContent=
+JSON.stringify(x,null,2);
+
+}
+
+
+if(token){
+
+api('/api/me').then(x=>{
+
+if(!x.error){
+
+me.textContent=
+'Login saved • Paid: '+x.paid;
+
+profiles();
+membership();
+
+}
+
+});
+
+}
+
+</script>
+
 </body>
 </html>
