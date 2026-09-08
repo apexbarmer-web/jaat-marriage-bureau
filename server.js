@@ -169,10 +169,13 @@ app.get('/api/admin/settings',auth,admin,(req,res)=>{
   res.json(Object.fromEntries(db.prepare('SELECT key,value FROM admin_settings').all().map(x=>[x.key,x.value])));
 });
 app.post('/api/admin/settings',auth,admin,(req,res)=>{
-  const allowed=['admin_name','admin_mobile','admin_whatsapp','contact_message'];
+  const allowed=['admin_name','admin_mobile','admin_whatsapp','contact_message','admin_advice'];
   const stmt=db.prepare('INSERT INTO admin_settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
   for(const k of allowed) if(req.body[k]!==undefined) stmt.run(k,String(req.body[k]));
   res.json({success:true});
 });
-
+app.get('/api/public-settings',(req,res)=>{
+  const rows=db.prepare("SELECT key,value FROM admin_settings WHERE key IN ('admin_name','contact_message','admin_advice')").all();
+  res.json(Object.fromEntries(rows.map(x=>[x.key,x.value])));
+});
 app.listen(PORT,()=>console.log(`JMB Phase 4 running on http://localhost:${PORT}`));
