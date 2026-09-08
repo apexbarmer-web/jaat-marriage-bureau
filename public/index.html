@@ -3,46 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jaat Marriage Bureau — Phase 4</title>
+<title>Jaat Marriage Bureau</title>
 
 <style>
 body{
-font-family:Arial,sans-serif;
-max-width:1000px;
-margin:auto;
-padding:16px;
-background:#f6f7fb
+  font-family:Arial,sans-serif;
+  max-width:1000px;
+  margin:auto;
+  padding:16px;
+  background:#f6f7fb;
 }
 .card{
-background:white;
-padding:16px;
-margin:12px 0;
-border-radius:12px;
-box-shadow:0 2px 8px #ddd
+  background:white;
+  padding:16px;
+  margin:12px 0;
+  border-radius:12px;
+  box-shadow:0 2px 8px #ddd;
 }
 button{
-padding:10px 14px;
-border:0;
-border-radius:8px;
-margin:4px;
-cursor:pointer
+  padding:10px 14px;
+  border:0;
+  border-radius:8px;
+  margin:4px;
+  cursor:pointer;
 }
-input,select{
-padding:10px;
-width:100%;
-box-sizing:border-box;
-margin:5px 0
+input,textarea,select{
+  padding:10px;
+  width:100%;
+  box-sizing:border-box;
+  margin:5px 0;
 }
 .grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-gap:12px
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:12px;
 }
 .lock{
-opacity:.65
+  opacity:.65;
 }
 small{
-color:#666
+  color:#666;
+}
+h1{
+  text-align:center;
 }
 </style>
 </head>
@@ -52,15 +55,10 @@ color:#666
 <h1>Jaat Marriage Bureau</h1>
 
 <div class="card">
-<h2>🔐 Login / Registration</h2>
+<h2>Login / Registration</h2>
 
-<p>नए सदस्य भी यहीं से FREE Registration कर सकते हैं।</p>
-
-<input id="mobile" type="tel" maxlength="10"
-placeholder="10 अंकों का मोबाइल नंबर">
-
-<input id="otp" type="tel" maxlength="6"
-placeholder="Demo OTP - कोई भी 6 अंक">
+<input id="mobile" placeholder="10 digit mobile number">
+<input id="otp" placeholder="Demo OTP: कोई भी 6 अंक">
 
 <button onclick="login()">Login / Register</button>
 
@@ -69,7 +67,7 @@ placeholder="Demo OTP - कोई भी 6 अंक">
 
 
 <div class="card">
-<h2>💳 Paid Membership</h2>
+<h2>Paid Membership</h2>
 
 <div class="grid">
 <button onclick="buy('monthly')">Monthly ₹299</button>
@@ -82,32 +80,34 @@ placeholder="Demo OTP - कोई भी 6 अंक">
 
 
 <div class="card">
-<h2>👥 Profiles</h2>
+<h2>Profiles</h2>
 
-<button onclick="profiles()">Profiles देखें / Refresh</button>
+<button onclick="profiles()">Profiles Refresh करें</button>
 
 <div id="profiles" class="grid"></div>
 </div>
 
 
 <div class="card">
-<h2>🤝 Admin से रिश्ता करवाएँ</h2>
+<h2>📢 Admin की सलाह</h2>
 
-<input id="adminmsg"
-placeholder="अपना संदेश लिखें">
-
-<button onclick="adminRequest()">
-Admin को Request भेजें
-</button>
+<p id="adminAdvice">सलाह लोड हो रही है...</p>
 </div>
 
 
 <div class="card">
-<h2>⚙️ Admin Dashboard</h2>
+<h2>Admin से रिश्ता करवाएँ</h2>
 
-<button onclick="dashboard()">
-Admin Dashboard खोलें
-</button>
+<input id="adminmsg" placeholder="अपना संदेश लिखें">
+
+<button onclick="adminRequest()">Request भेजें</button>
+</div>
+
+
+<div class="card">
+<h2>Admin Dashboard</h2>
+
+<button onclick="dashboard()">Admin Dashboard खोलें</button>
 
 <pre id="admin"></pre>
 </div>
@@ -117,200 +117,192 @@ Admin Dashboard खोलें
 
 let token=localStorage.getItem('jmb_token');
 
-const api=(u,o={})=>
+const api=(u,o={}) =>
 fetch(u,{
-...o,
-headers:{
-'Content-Type':'application/json',
-...(o.headers||{}),
-...(token?{Authorization:'Bearer '+token}:{})
-}
+  ...o,
+  headers:{
+    'Content-Type':'application/json',
+    ...(o.headers||{}),
+    ...(token ? {Authorization:'Bearer '+token} : {})
+  }
 }).then(r=>r.json());
 
 
 async function login(){
 
-const x=await api('/api/login',{
-method:'POST',
-body:JSON.stringify({
-mobile:mobile.value,
-otp:otp.value
-})
-});
+  const x=await api('/api/login',{
+    method:'POST',
+    body:JSON.stringify({
+      mobile:mobile.value,
+      otp:otp.value
+    })
+  });
 
-if(x.token){
+  if(x.token){
 
-token=x.token;
+    token=x.token;
 
-localStorage.setItem('jmb_token',token);
+    localStorage.setItem('jmb_token',token);
 
-me.textContent=
-'Login सफल • Paid: '+x.user.paid;
+    document.getElementById('me').textContent=
+      'Login सफल • Paid: '+x.user.paid;
 
-profiles();
-membership();
+    profiles();
+    membership();
 
-}else{
+  }else{
 
-alert(x.error||'Login failed');
+    alert(x.error||'Login failed');
 
-}
-
+  }
 }
 
 
 async function buy(plan){
 
-if(!token)
-return alert('पहले Login करें');
+  if(!token)
+    return alert('पहले Login करें');
 
-const x=await api('/api/membership/create',{
-method:'POST',
-body:JSON.stringify({plan})
-});
+  const x=await api('/api/membership/create',{
+    method:'POST',
+    body:JSON.stringify({plan})
+  });
 
-if(x.membership_id){
+  if(x.membership_id){
 
-if(confirm(
-x.message+
-'\nDemo payment activate करें?'
-)){
+    if(confirm(x.message+'\nDemo payment activate करें?')){
 
-const y=await api(
-'/api/membership/demo-pay',
-{
-method:'POST',
-body:JSON.stringify({
-membership_id:x.membership_id
-})
-}
-);
+      const y=await api('/api/membership/demo-pay',{
+        method:'POST',
+        body:JSON.stringify({
+          membership_id:x.membership_id
+        })
+      });
 
-alert(y.message||y.error);
+      alert(y.message||y.error);
 
-membership();
-profiles();
+      membership();
+      profiles();
 
-}
+    }
 
-}else{
+  }else{
 
-alert(x.error);
+    alert(x.error||'Membership error');
 
-}
-
+  }
 }
 
 
 async function membership(){
 
-const x=await api('/api/memberships');
+  const x=await api('/api/memberships');
 
-document.getElementById('membership').innerHTML=
-
-x.map(m=>
-`<p>
-<b>${m.plan_name}</b>
-₹${m.amount}
-— ${m.status}
-${m.end_at?'— '+m.end_at:''}
-</p>`
-).join('')
-
-||'कोई membership नहीं';
-
+  document.getElementById('membership').innerHTML=
+    x.map(m=>
+      `<p>
+        <b>${m.plan_name}</b>
+        ₹${m.amount}
+        — ${m.status}
+        ${m.end_at ? '— '+m.end_at : ''}
+      </p>`
+    ).join('') || 'कोई membership नहीं';
 }
 
 
 async function profiles(){
 
-const x=await api('/api/profiles');
+  const x=await api('/api/profiles');
 
-document.getElementById('profiles').innerHTML=
+  document.getElementById('profiles').innerHTML=
 
-x.map(p=>
-`<div class="card">
+    x.map(p=>
+      `<div class="card">
+        <b>${p.name||'नाम नहीं'}</b><br>
+        उम्र: ${p.age||'-'}<br>
+        शिक्षा: ${p.education||'-'}<br>
+        ${p.village ? 'गाँव: '+p.village+'<br>' : ''}
+        ${p.profession ? 'पेशा: '+p.profession+'<br>' : ''}
+        ${p.mobile ? '📞 '+p.mobile : '🔒 मोबाइल गोपनीय'}
+      </div>`
+    ).join('')
 
-<b>${p.name||'नाम नहीं'}</b>
-
-<br>
-उम्र: ${p.age||'-'}
-
-<br>
-शिक्षा: ${p.education||'-'}
-
-${p.village?
-'<br>गाँव: '+p.village:''
+    || 'कोई approved profile नहीं';
 }
 
-<br>
 
-${p.mobile?
-'📞 '+p.mobile:
-'🔒 मोबाइल गोपनीय'
-}
+async function loadAdminAdvice(){
 
-</div>`
-).join('')
+  try{
 
-||'कोई approved profile नहीं';
+    const x=await fetch('/api/public-settings')
+      .then(r=>r.json());
 
+    document.getElementById('adminAdvice').textContent=
+
+      x.admin_advice ||
+      'अभी कोई सलाह उपलब्ध नहीं है।';
+
+  }catch(e){
+
+    document.getElementById('adminAdvice').textContent=
+      'अभी कोई सलाह उपलब्ध नहीं है।';
+
+  }
 }
 
 
 async function adminRequest(){
 
-const x=await api('/api/admin-request',{
-method:'POST',
-body:JSON.stringify({
-message:adminmsg.value
-})
-});
+  if(!token)
+    return alert('पहले Login करें');
 
-alert(x.message||x.error);
+  const x=await api('/api/admin-request',{
+    method:'POST',
+    body:JSON.stringify({
+      message:adminmsg.value
+    })
+  });
+
+  alert(x.message||x.error);
 
 }
 
 
 async function dashboard(){
 
-const x=await api('/api/admin/dashboard');
+  if(!token)
+    return alert('पहले Login करें');
 
-document.getElementById('admin').textContent=
-JSON.stringify(x,null,2);
+  const x=await api('/api/admin/dashboard');
 
+  document.getElementById('admin').textContent=
+    JSON.stringify(x,null,2);
 }
+
+
+loadAdminAdvice();
 
 
 if(token){
 
-api('/api/me').then(x=>{
+  api('/api/me').then(x=>{
 
-if(!x.error){
+    if(!x.error){
 
-me.textContent=
-'Login saved • Paid: '+x.paid;
+      document.getElementById('me').textContent=
+        'Login saved • Paid: '+x.paid;
 
-profiles();
-membership();
+      profiles();
+      membership();
 
-}
+    }
 
-});
+  });
 
 }
 
 </script>
-<div class="card">
-  <h2>📢 Admin की सलाह</h2>
-  <p>
-    विवाह जीवन का महत्वपूर्ण निर्णय है। रिश्ता तय करने से पहले
-    परिवार, स्वभाव, शिक्षा, संस्कार और भविष्य की योजनाओं के बारे में
-    अच्छी तरह जानकारी प्राप्त करें।
-  </p>
-  <p>
-    कृपया किसी भी सदस्य से संपर्क करते समय सम्मान और गोपनीयता का ध्यान रखें।
-  </p>
-</div>
+
 </body>
 </html>
