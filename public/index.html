@@ -1601,7 +1601,68 @@ async function checkLogin(){
 loadAdminAdvice();
 
 checkLogin();
+async function adminLogin(){
 
+  const mobile = document.getElementById('mobile').value.trim();
+  const otp = document.getElementById('otp').value.trim();
+
+  if(!/^[0-9]{10}$/.test(mobile)){
+    alert('10 digit mobile number डालें');
+    return;
+  }
+
+  if(!/^[0-9]{6}$/.test(otp)){
+    alert('6 digit Admin OTP डालें');
+    return;
+  }
+
+  try{
+
+    const r = await fetch('/api/login',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        mobile: mobile,
+        otp: otp
+      })
+    });
+
+    const x = await r.json();
+
+    if(!r.ok){
+      alert(x.error || 'Admin Login असफल');
+      return;
+    }
+
+    if(x.user.role !== 'admin'){
+      alert('यह Admin Account नहीं है');
+      return;
+    }
+
+    token = x.token;
+
+    localStorage.setItem('jmb_token', token);
+
+    document.getElementById('me').innerHTML =
+      '✅ Admin Login सफल • Role: <b>admin</b>';
+
+    document.getElementById('adminPanel')
+      .classList.remove('hidden');
+
+    await dashboard();
+
+    document.getElementById('adminPanel')
+      .scrollIntoView({behavior:'smooth'});
+
+  }catch(e){
+
+    alert('Server से संपर्क नहीं हो पाया');
+
+  }
+
+}
 </script>
 
 </body>
